@@ -1,0 +1,111 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{setspace}
+\setstretch{1.08}
+
+\title{Cache-Friendly Graph Processing Report\\\large Pointer BFS vs CSR BFS}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Setup}
+I ran the provided benchmark and cache simulation on the generated star graph with
+\(n=20000\), source vertex \(0\), and these repeat counts:
+\begin{itemize}
+\item Runtime rows: \texttt{repeat=100}
+\item Cachegrind rows: \texttt{repeat=50}
+\end{itemize}
+Baseline cache configuration:
+\(I1=32\text{KB}, 8\text{-way}, 64\text{B};\ D1=32\text{KB}, 8\text{-way}, 64\text{B};\ LL=8\text{MB}, 16\text{-way}, 64\text{B}\).
+
+\section*{Q1: Runtime Comparison}
+From \texttt{metrics.csv} (runtime scope):
+\begin{itemize}
+\item Pointer BFS average time per run: \(0.0394\,\text{ms}\)
+\item CSR BFS average time per run: \(0.0292\,\text{ms}\)
+\end{itemize}
+
+CSR is faster in this experiment.
+The relative speedup is
+\[
+\frac{0.0394 - 0.0292}{0.0394} \times 100 \approx 25.9\%.
+\]
+So CSR is about \(1.35\times\) faster on runtime for this test.
+
+\section*{Q2: Cache Behavior (Baseline Cachegrind)}
+From baseline Cachegrind rows:
+\begin{center}
+\begin{tabular}{lSS}
+\toprule
+Implementation & {D1 misses/run} & {LLd misses/run} \\
+\midrule
+Pointer & 18096.92 & 335.98 \\
+CSR     & 8634.96  & 386.00 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Observations:
+\begin{itemize}
+\item CSR has far fewer \(D1\) misses (about \(52.3\%\) lower than pointer).
+\item Pointer has slightly fewer \(LLd\) misses (about \(12.96\%\) lower than CSR).
+\end{itemize}
+
+Interpretation: CSR improves L1 data-cache locality strongly because neighbor arrays are contiguous.
+However, this specific graph/workload still produces similar (or slightly worse) last-level behavior for CSR.
+
+\section*{Q3: Why CSR Tends to Perform Better}
+CSR usually performs better because its memory layout is contiguous:
+\begin{itemize}
+\item \textbf{Spatial locality:} Neighbor indices for one vertex are stored in adjacent memory.
+\item \textbf{Fewer pointer dereferences:} Traversal uses array indexing rather than linked-list pointer chasing.
+\item \textbf{Better hardware prefetch:} Sequential access patterns are easier for CPU prefetchers.
+\end{itemize}
+
+In contrast, pointer-based adjacency lists can scatter nodes in heap memory, increasing random access and cache pressure.
+Even when total algorithmic complexity is the same, memory layout changes effective performance.
+
+\section*{Q4: Effect of Cache Parameters}
+\subsection*{1) Increasing cache size}
+Comparing D1 sizes \(16\text{KB} \rightarrow 32\text{KB} \rightarrow 64\text{KB}\):
+\begin{itemize}
+\item Pointer D1 misses/run: \(18140.28 \rightarrow 18096.92 \rightarrow 18085.40\) (small improvement)
+\item CSR D1 misses/run: \(8678.32 \rightarrow 8634.96 \rightarrow 8623.44\) (small improvement)
+\end{itemize}
+Larger D1 helps both implementations a little; benefit is modest for this workload.
+
+\subsection*{2) Increasing associativity}
+With fixed \(32\text{KB}, 64\text{B}\) D1 and associativity \(1,2,4,8\):
+\begin{itemize}
+\item Pointer D1 misses/run: \(21348.82, 18152.22, 18101.84, 18096.92\)
+\item CSR D1 misses/run: \(11892.18, 8690.28, 8639.88, 8634.96\)
+\end{itemize}
+Higher associativity clearly reduces conflict misses, especially moving from direct-mapped (1-way) to 2-way.
+
+\subsection*{3) Changing line size}
+With fixed \(32\text{KB}, 8\)-way D1 and line sizes \(32,64,128\) B:
+\begin{itemize}
+\item Pointer D1 misses/run: \(36137.78, 18096.92, 9069.14\)
+\item CSR D1 misses/run: \(17224.14, 8634.96, 4333.00\)
+\end{itemize}
+Larger line size greatly lowers D1 misses for both because BFS neighbor access has spatial locality.
+
+\subsection*{4) Does CSR benefit more from larger lines?}
+Both improve by almost the same fraction from 32B to 128B lines:
+\begin{itemize}
+\item Pointer: about \(74.9\%\) reduction in D1 misses/run
+\item CSR: about \(74.8\%\) reduction in D1 misses/run
+\end{itemize}
+So in this dataset, both benefit similarly in percentage terms. CSR still has fewer absolute misses at each line size.
+
+\section*{Conclusion}
+The collected metrics match the assignment requirements and support the expected memory-layout lesson:
+contiguous storage (CSR) substantially reduces L1 data-cache misses and improves runtime in this experiment.
+Cache size has small impact, while associativity and especially line size have stronger effects.
+
+\end{document}
