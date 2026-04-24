@@ -1,6 +1,6 @@
 measurement,scope,impl,n,repeat,cache_config,visited,time_ms_avg,d1_misses_total,d1_misses_per_run,lld_misses_total,lld_misses_per_run,d1_rd_misses_total,d1_wr_misses_total,lld_rd_misses_total,lld_wr_misses_total
-runtime,bfs_only,pointer,20000,100,,20000,0.039400,,,,,,,
-runtime,bfs_only,csr,20000,100,,20000,0.029200,,,,,,,
+runtime,bfs_only,pointer,20000,100,,20000,0.037600,,,,,,,
+runtime,bfs_only,csr,20000,100,,20000,0.022100,,,,,,,
 cachegrind,baseline,pointer,20000,50,"I1=32768,8,64;D1=32768,8,64;LL=8388608,16,64",20000,1.174000,904846,18096.92,16799,335.98,766239,138607,1249,15550
 cachegrind,baseline,csr,20000,50,"I1=32768,8,64;D1=32768,8,64;LL=8388608,16,64",20000,1.351000,431748,8634.96,19300,386.00,290825,140923,1249,18051
 cachegrind,cache_size,pointer,20000,50,"I1=32768,8,64;D1=16384,8,64;LL=8388608,16,64",20000,1.193000,907014,18140.28,16799,335.98,768355,138659,1249,15550

@@ -1,0 +1,5 @@
+measurement,scope,graph_kind,graph_file,impl,n,source,repeat,cache_config,visited,time_ms_avg,d1_misses_total,d1_misses_per_run,lld_misses_total,lld_misses_per_run,d1_rd_misses_total,d1_wr_misses_total,lld_rd_misses_total,lld_wr_misses_total
+runtime,repeat_sweep,chain,.metrics_chain_200.txt,pointer,200,0,1,,200,0.000000,,,,,,,
+runtime,repeat_sweep,chain,.metrics_chain_200.txt,csr,200,0,1,,200,0.000000,,,,,,,
+runtime,repeat_sweep,chain,.metrics_chain_200.txt,pointer,200,0,5,,200,0.000000,,,,,,,
+runtime,repeat_sweep,chain,.metrics_chain_200.txt,csr,200,0,5,,200,0.002000,,,,,,,

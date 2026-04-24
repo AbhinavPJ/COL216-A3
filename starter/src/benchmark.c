@@ -16,17 +16,22 @@ int run_benchmark(const char* impl, const char* graph_path, int source, int repe
     int* dist = (int*)malloc((size_t)g->num_vertices * sizeof(int));
     if (!dist) { fprintf(stderr, "malloc failed\n"); free_graph(g); return 1; }
     int visited = -1;
+    double conversion_ms = 0.0;
     double start = now_ms();
     if (strcmp(impl, "pointer") == 0) {
         for (int i = 0; i < repeat; i++) visited = bfs_pointer(g, source, dist);
     } else if (strcmp(impl, "csr") == 0) {
+        double conv_start = now_ms();
         CSRGraph* csr = convert_to_csr(g);
+        double conv_end = now_ms();
         if (!csr) { fprintf(stderr, "convert_to_csr failed\n"); free(dist); free_graph(g); return 1; }
+        conversion_ms = conv_end - conv_start;
         for (int i = 0; i < repeat; i++) visited = bfs_csr(csr, source, dist);
         free_csr(csr);
     } else { fprintf(stderr, "unknown impl\n"); free(dist); free_graph(g); return 1; }
     double end = now_ms();
     printf("visited=%d\n", visited);
+    printf("conversion_ms=%.2f\n", conversion_ms);
     printf("time_ms=%.2f\n", end - start);
     free(dist); free_graph(g); return 0;
 }
